@@ -50,7 +50,6 @@ typedef enum e_Displacement Displacement;
 
 typedef uint32_t Word;
 typedef uint8_t Constant;
-typedef uint32_t Instruction;
 
 /** Registerselection and displacement */
 struct s_RegisterSelect {
@@ -60,15 +59,16 @@ struct s_RegisterSelect {
 };
 typedef struct s_RegisterSelect RegisterSelect;
 
-struct cpu23_instr {
-	uint8_t C:6;
-	uint8_t B:4;
-	uint8_t Ib:2;
-	uint8_t A:4;
-	uint8_t Ia:2;
-	uint8_t opcode:6;
+struct s_Instruction {
+    Constant C:6;
+    RegSel B:4;
+    Displacement Ib:3;
+    RegSel A:4;
+    Displacement Ia:3;
+    OpCode opcode:6;
+    uint8_t reserved:1;
 };
-
+typedef struct s_Instruction Instruction;
 
 struct s_InstructionWord {
 	uint8_t data[3];

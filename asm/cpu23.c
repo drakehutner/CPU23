@@ -61,20 +61,30 @@ InstructionWord fromInt(int cmd) {
 
  
 Instruction buildInstruction(OpCode op, RegisterSelect regA, RegisterSelect regB, Constant c) {
-	if (op == CONSTANT) {
-		return c & 0x7FFFFF;
-	} else if ( op >= 0) {
-		return (1 << 23)
-			| (op << 18)
-			| (regA.disp << 16)
-			| (regA.reg  << 12)
-			| (regB.disp << 10)
-			| (regB.reg  << 6)
-			| (c << 0)
-		;
-	} else {
-		return (1 << 23) | (NOP << 18);
-	}
+    Instruction instr;
+    instr.C = c;
+    instr.B = regB.reg;
+    instr.Ib = regB.disp;
+    instr.A = regA.reg;
+    instr.Ia = regA.disp;
+    instr.opcode = op;
+    instr.reserved = 0;
+
+//	if (op == CONSTANT) {
+//		return c & 0x7FFFFF;
+//	} else if ( op >= 0) {
+//		return (1 << 23)
+//			| (op << 18)
+//			| (regA.disp << 16)
+//			| (regA.reg  << 12)
+//			| (regB.disp << 10)
+//			| (regB.reg  << 6)
+//			| (c << 0)
+//		;
+//	} else {
+//		return (1 << 23) | (NOP << 18);
+//	}
+    return instr;
 }
 
 HexFile * newHexFile() {
@@ -102,8 +112,8 @@ int addToHexFile(HexFile * hexfile, Instruction cmd) {
 			hexfile->chunks = CHUNKSIZE;	
 		}
 		if (hexfile->instructions != NULL) {
-			printf("\t->0x%.6X\n", (int)cmd);
-			hexfile->instructions[((hexfile->len)++)] = fromInt(cmd);
+			printf("\t->0x%.6X\n", *(uint32_t*)&cmd);
+			hexfile->instructions[((hexfile->len)++)] = *(InstructionWord*)&cmd;
 			hexfile->chunks--;
 			return 0;
 		} else {
@@ -160,10 +170,13 @@ int parseLine(char * line, Instruction * cmd) {
 		/* Constant */
 		printf("\tline: %s\n", line);
 		if (*line == '#') {
+            RegisterSelect empty;
+            empty.reg = 0;
+            empty.disp = 0;
 			int val = 0;
 			op = CONSTANT;
 			sscanf(line, "#%i", &val);
-			*cmd = val & 0x7FFFFF;
+            *cmd = buildInstruction(op, empty, empty, val);
 		} else{
 			if (parseOpCode(line, &op) && parseRegisterSelect(line, &rA) && parseRegisterSelect(line, &rB) && parseConstant(&(line[0]), &cnst))
 				*cmd = buildInstruction(op, rA, rB, cnst);
